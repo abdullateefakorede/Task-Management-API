@@ -7,6 +7,8 @@ import { disconnect } from 'mongoose';
 describe('TaskController (e2e)', () => {
   let app: INestApplication;
   let token: string;
+  let id: string;
+  let idDueAt: string;
   const data = {
     id: expect.any(String),
     token: expect.any(String),
@@ -52,81 +54,6 @@ describe('TaskController (e2e)', () => {
     });
   });
 
-  describe('getTasksByUserId', () => {
-    beforeEach(() => jest.clearAllMocks());
-
-    it('should return user tasks using valid token', async () => {
-      const message = 'Tasks Successfully Fetched';
-      const response = await request(app.getHttpServer())
-        .get('/tasks')
-        .set({ Authorization: `Bearer ${token}` })
-        .expect(200);
-      expect(response.body).toBeDefined();
-      expect(response.body).toBeDefined();
-      expect(response.body.data).toEqual(expect.arrayContaining([task]));
-      expect(response.body.success).toBeTruthy();
-      expect(response.body.message).toStrictEqual(message);
-    });
-
-    it('should sendErrorResponse with invalid token', async () => {
-      const message = 'Bad/Expired Token';
-      const response = await request(app.getHttpServer())
-        .get('/tasks')
-        .set({ Authorization: `Bearer gwff3ytfy53hjvb3vyytv4ejcbyvwefvnmbefv` })
-        .expect(401);
-      expect(response.body).toBeDefined();
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data).toBeNull();
-      expect(response.body.success).toBeFalsy();
-      expect(response.body.message).toStrictEqual(message);
-    });
-  });
-
-  describe('getTaskById', () => {
-    beforeEach(() => jest.clearAllMocks());
-
-    it('should sendSuccessResponse with task details when taskId is valid', async () => {
-      const message = 'Task Successfully Fetched';
-      const response = await request(app.getHttpServer())
-        .get('/tasks/3yfZ6')
-        .set({ Authorization: `Bearer ${token}` })
-        .expect(200);
-      expect(response.body).toBeDefined();
-      expect(response.body).toBeDefined();
-      expect(response.body.data).toEqual(expect.objectContaining(task));
-      expect(response.body.success).toBeTruthy();
-      expect(response.body.message).toStrictEqual(message);
-    });
-
-    it('should sendErrorResponse with invalid taskId', async () => {
-      const message = 'Invalid Task Id';
-      const response = await request(app.getHttpServer())
-        .get('/tasks/uKOym')
-        .set({ Authorization: `Bearer ${token}` })
-        .expect(400);
-      expect(response.body).toBeDefined();
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data).toBeNull();
-      expect(response.body.success).toBeFalsy();
-      expect(response.body.message).toStrictEqual(message);
-    });
-
-    it('should sendErrorResponse when request is made with invalid token', async () => {
-      const message = 'Bad/Expired Token';
-      const response = await request(app.getHttpServer())
-        .get('/tasks/3yfZ6')
-        .set({
-          Authorization: `Bearer fgdsghchsdvchsdhvsdvsvhdvhjsdhshsdvhshdsd}`,
-        })
-        .expect(401);
-      expect(response.body).toBeDefined();
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data).toBeNull();
-      expect(response.body.success).toBeFalsy();
-      expect(response.body.message).toStrictEqual(message);
-    });
-  });
-
   describe('createTask', () => {
     beforeEach(() => jest.clearAllMocks());
 
@@ -142,6 +69,8 @@ describe('TaskController (e2e)', () => {
       expect(response.body.data).toEqual(expect.objectContaining(task));
       expect(response.body.success).toBeTruthy();
       expect(response.body.message).toStrictEqual(message);
+      expect(response.body.data.id).toBeDefined();
+      id = response.body.data.id;
     });
 
     it('should sendSuccessResponse with task name and valid dueAt', async () => {
@@ -156,6 +85,8 @@ describe('TaskController (e2e)', () => {
       expect(response.body.data).toEqual(expect.objectContaining(task));
       expect(response.body.success).toBeTruthy();
       expect(response.body.message).toStrictEqual(message);
+      expect(response.body.data.id).toBeDefined();
+      idDueAt = response.body.data.id;
     });
 
     // it('should sendErrorResponse when request is made with past date', async () => {
@@ -207,7 +138,7 @@ describe('TaskController (e2e)', () => {
     it('should sendSuccessResponse with updatedTask with valid token', async () => {
       const message = 'Task Successfully Updated';
       const response = await request(app.getHttpServer())
-        .patch('/tasks/3yfZ6')
+        .patch(`/tasks/${id}`)
         .set({ Authorization: `Bearer ${token}` })
         .expect(200);
       expect(response.body).toBeDefined();
@@ -246,7 +177,82 @@ describe('TaskController (e2e)', () => {
     it('should sendErrorResponse when request is made with invalid token', async () => {
       const message = 'Bad/Expired Token';
       const response = await request(app.getHttpServer())
-        .patch('/tasks/3yfZ6')
+        .patch(`/tasks/${id}`)
+        .set({
+          Authorization: `Bearer fgdsghchsdvchsdhvsdvsvhdvhjsdhshsdvhshdsd}`,
+        })
+        .expect(401);
+      expect(response.body).toBeDefined();
+      expect(response.body.data).toBeDefined();
+      expect(response.body.data).toBeNull();
+      expect(response.body.success).toBeFalsy();
+      expect(response.body.message).toStrictEqual(message);
+    });
+  });
+
+  describe('getTasksByUserId', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    it('should return user tasks using valid token', async () => {
+      const message = 'Tasks Successfully Fetched';
+      const response = await request(app.getHttpServer())
+        .get('/tasks')
+        .set({ Authorization: `Bearer ${token}` })
+        .expect(200);
+      expect(response.body).toBeDefined();
+      expect(response.body).toBeDefined();
+      expect(response.body.data).toEqual(expect.arrayContaining([task]));
+      expect(response.body.success).toBeTruthy();
+      expect(response.body.message).toStrictEqual(message);
+    });
+
+    it('should sendErrorResponse with invalid token', async () => {
+      const message = 'Bad/Expired Token';
+      const response = await request(app.getHttpServer())
+        .get('/tasks')
+        .set({ Authorization: `Bearer gwff3ytfy53hjvb3vyytv4ejcbyvwefvnmbefv` })
+        .expect(401);
+      expect(response.body).toBeDefined();
+      expect(response.body.data).toBeDefined();
+      expect(response.body.data).toBeNull();
+      expect(response.body.success).toBeFalsy();
+      expect(response.body.message).toStrictEqual(message);
+    });
+  });
+
+  describe('getTaskById', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    it('should sendSuccessResponse with task details when taskId is valid', async () => {
+      const message = 'Task Successfully Fetched';
+      const response = await request(app.getHttpServer())
+        .get(`/tasks/${id}`)
+        .set({ Authorization: `Bearer ${token}` })
+        .expect(200);
+      expect(response.body).toBeDefined();
+      expect(response.body).toBeDefined();
+      expect(response.body.data).toEqual(expect.objectContaining(task));
+      expect(response.body.success).toBeTruthy();
+      expect(response.body.message).toStrictEqual(message);
+    });
+
+    it('should sendErrorResponse with invalid taskId', async () => {
+      const message = 'Invalid Task Id';
+      const response = await request(app.getHttpServer())
+        .get('/tasks/uKOym')
+        .set({ Authorization: `Bearer ${token}` })
+        .expect(400);
+      expect(response.body).toBeDefined();
+      expect(response.body.data).toBeDefined();
+      expect(response.body.data).toBeNull();
+      expect(response.body.success).toBeFalsy();
+      expect(response.body.message).toStrictEqual(message);
+    });
+
+    it('should sendErrorResponse when request is made with invalid token', async () => {
+      const message = 'Bad/Expired Token';
+      const response = await request(app.getHttpServer())
+        .get('/tasks/3yfZ6')
         .set({
           Authorization: `Bearer fgdsghchsdvchsdhvsdvsvhdvhjsdhshsdvhshdsd}`,
         })
@@ -291,7 +297,7 @@ describe('TaskController (e2e)', () => {
     it('should sendErrorResponse when request is made with invalid token', async () => {
       const message = 'Bad/Expired Token';
       const response = await request(app.getHttpServer())
-        .delete('/tasks/zxTRm')
+        .delete(`/tasks/${id}`)
         .set({
           Authorization: `Bearer fgdsghchsdvchsdhvsdvsvhdvhjsdhshsdvhshdsd}`,
         })
@@ -306,7 +312,20 @@ describe('TaskController (e2e)', () => {
     it('should sendSuccessResponse with deleted Task details using valid token', async () => {
       const message = 'Task Successfully Deleted';
       const response = await request(app.getHttpServer())
-        .delete('/tasks/zxTRm')
+        .delete(`/tasks/${id}`)
+        .set({ Authorization: `Bearer ${token}` })
+        .expect(200);
+      expect(response.body).toBeDefined();
+      expect(response.body).toBeDefined();
+      expect(response.body.data).toEqual(expect.objectContaining(task));
+      expect(response.body.success).toBeTruthy();
+      expect(response.body.message).toStrictEqual(message);
+    });
+
+    it('should sendSuccessResponse with deleted Task details with dueAt using valid token', async () => {
+      const message = 'Task Successfully Deleted';
+      const response = await request(app.getHttpServer())
+        .delete(`/tasks/${idDueAt}`)
         .set({ Authorization: `Bearer ${token}` })
         .expect(200);
       expect(response.body).toBeDefined();

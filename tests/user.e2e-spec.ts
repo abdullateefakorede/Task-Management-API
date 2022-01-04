@@ -75,7 +75,7 @@ describe('UserController (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/user/signup')
         .send({
-          username: '500Kobo',
+          username: '50Kobo',
           password: 'Kobo3602019@',
           name: 'Kobo',
           birthdate: '12-1-2010',
