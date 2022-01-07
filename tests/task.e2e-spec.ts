@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { disconnect } from 'mongoose';
@@ -31,6 +31,7 @@ describe('TaskController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
   });
 
@@ -89,30 +90,30 @@ describe('TaskController (e2e)', () => {
       idDueAt = response.body.data.id;
     });
 
-    // it('should sendErrorResponse when request is made with past date', async () => {
-    //   const message = 'Bad/Expired Token';
-    //   const response = await request(app.getHttpServer())
-    //     .post('/tasks')
-    //     .set({ Authorization: `Bearer ${token}` })
-    //     .send({ name: 'Sample Task', dueAt: '01-31-2019' })
-    //   expect(response.body).toBeDefined();
-    //   expect(response.body.data).toBeDefined();
-    //   expect(response.body.data).toBeNull();
-    //   expect(response.body.success).toBeFalsy();
-    //   expect(response.body.message).toStrictEqual(message);
-    // });
+    it('should sendErrorResponse when request is made with past date', async () => {
+      const message = expect.any(String);
+      const response = await request(app.getHttpServer())
+        .post('/tasks')
+        .set({ Authorization: `Bearer ${token}` })
+        .send({ name: 'Sample Task', dueAt: '01-31-2019' })
+      expect(response.body).toBeDefined();
+      expect(response.body.data).not.toBeDefined();
+      expect(response.body.success).toBeFalsy();
+      expect(response.body.message).toBeDefined();
+      expect(response.body.message).toEqual(expect.arrayContaining([message]));
+    });
 
     it('should sendErrorResponse when request body is empty', async () => {
-      const message = 'Something went wrong';
+      const message = expect.any(String);
       const response = await request(app.getHttpServer())
         .post('/tasks')
         .set({ Authorization: `Bearer ${token}` })
         .expect(400);
       expect(response.body).toBeDefined();
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data).toBeNull();
+      expect(response.body.data).not.toBeDefined();
       expect(response.body.success).toBeFalsy();
-      expect(response.body.message).toStrictEqual(message);
+      expect(response.body.message).toBeDefined();
+      expect(response.body.message).toEqual(expect.arrayContaining([message]));
     });
 
     it('should sendErrorResponse when request is made with invalid token', async () => {
